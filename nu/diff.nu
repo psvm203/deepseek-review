@@ -152,27 +152,37 @@ def apply-file-filters [
 ] {
   mut filtered_content = $content
   let awk_bin = (prepare-awk)
-  let outdated_awk = $'If you are using an (ansi r)outdated awk version(ansi reset), please upgrade to the latest version or use gawk latest instead.'
 
   if ($include | is-not-empty) {
     let patterns = $include | split row ','
-    $filtered_content = $filtered_content | try {
-      ^$awk_bin (generate-include-regex $patterns)
-    } catch {
-      print $outdated_awk
-      exit $ECODE.OUTDATED
-    }
+    $filtered_content = run-awk-filter $awk_bin (generate-include-regex $patterns) $filtered_content
   }
 
   if ($exclude | is-not-empty) {
     let patterns = $exclude | split row ','
-    $filtered_content = $filtered_content | try {
-      ^$awk_bin (generate-exclude-regex $patterns)
-    } catch {
-      print $outdated_awk
-      exit $ECODE.OUTDATED
-    }
+    $filtered_content = run-awk-filter $awk_bin (generate-exclude-regex $patterns) $filtered_content
   }
 
   $filtered_content
+}
+
+# Drain both output streams before try waits for the external command to finish.
+# Keep the historical filter failure status (1), with the actual cause on stderr.
+def run-awk-filter [awk_bin: string, program: string, content: string] {
+  let result = try {
+    $content | ^$awk_bin $program | complete
+  } catch {|err|
+    print -e $'Could not run diff filter with ($awk_bin): ($err.msg)'
+    exit $ECODE.OUTDATED
+  }
+  if $result.exit_code != 0 {
+    print -e $'Diff filter failed with ($awk_bin) with exit code ($result.exit_code): ($result.stderr)'
+    exit $ECODE.OUTDATED
+  }
+  if ($result.stderr | is-not-empty) {
+    print -en $result.stderr
+  }
+  # External output assigned to a Nu string previously lost one terminal newline.
+  # Match that conversion exactly; never trim meaningful spaces or blank lines.
+  $result.stdout | str replace -r '\r?\n$' ''
 }
