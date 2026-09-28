@@ -51,6 +51,7 @@ on:
 
 # fix: GraphQL: Resource not accessible by integration (addComment) error
 permissions:
+  contents: read
   pull-requests: write
 
 jobs:
@@ -97,6 +98,7 @@ on:
 
 # fix: GraphQL: Resource not accessible by integration (addComment) error
 permissions:
+  contents: read
   pull-requests: write
 
 jobs:
@@ -132,6 +134,7 @@ on:
       - created # Triggers when a comment is created on a PR
 
 permissions:
+  contents: read
   pull-requests: write
 
 jobs:
@@ -168,6 +171,7 @@ _Github Models_ 提供了非常慷慨的免费额度，对于基本的代码审�
 
 ```yaml
 permissions:
+  contents: read
   pull-requests: write
   models: read        # 必要的权限
 
@@ -184,6 +188,28 @@ jobs:
           model: 'openai/gpt-5'
           base-url: 'https://models.github.ai/inference'       # Github Models的API端点
 ```
+
+### 在大型 PR 中只审查指定文件
+
+设置 `include-patterns: '*.cs'` 可只审查 C# 文件，包含子目录中的文件。
+多个模式用逗号分隔（例如 `'*.cs,*.fs'`），`exclude-patterns` 优先排除匹配的文件。
+
+```yaml
+permissions:
+  contents: read
+  pull-requests: write
+
+# 在 DeepSeek Code Review 步骤中设置：
+with:
+  chat-token: ${{ secrets.CHAT_TOKEN }}
+  include-patterns: '*.cs'
+```
+
+当 PR 的变更文件数达到 3,000，或 GitHub 无法返回 diff 时，Action 会将 PR
+提交拉取到临时 Git 仓库，与共同祖先提交进行比较。文件模式在下载文件内容之前生效，
+无需添加 checkout 步骤。运行环境需要安装 Git，访问私有仓库的 GitHub token
+需要 `contents: read` 权限。此模式下重命名显示为删除和新增；没有匹配文件时跳过审查。
+命令行通过 `--include '*.cs'` 使用相同功能。
 
 ## 输入参数
 

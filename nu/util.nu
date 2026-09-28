@@ -58,7 +58,7 @@ export def prepare-awk [] {
 # 2. Convert ? to . (optional, as needed)
 # 3. Convert / to \/
 # 4. Convert **/ to an optional directory prefix
-def glob-to-regex [patterns: list<string>] {
+export def glob-to-regex [patterns: list<string>] {
   # Handle empty patterns list
   if ($patterns | length) == 0 { return '' }
 

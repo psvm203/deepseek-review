@@ -53,6 +53,7 @@ on:
 
 # fix: GraphQL: Resource not accessible by integration (addComment) error
 permissions:
+  contents: read
   pull-requests: write
 
 jobs:
@@ -99,6 +100,7 @@ on:
 
 # fix: GraphQL: Resource not accessible by integration (addComment) error
 permissions:
+  contents: read
   pull-requests: write
 
 jobs:
@@ -134,6 +136,7 @@ on:
       - created # Triggers when a comment is created on a PR
 
 permissions:
+  contents: read
   pull-requests: write
 
 jobs:
@@ -170,6 +173,7 @@ _Github Models_ offers a generous free tier, and it is enough for basic code rev
 
 ```yaml
 permissions:
+  contents: read
   pull-requests: write
   models: read   # Required for using Github Models
 
@@ -186,6 +190,30 @@ jobs:
           model: 'openai/gpt-5'
           base-url: 'https://models.github.ai/inference'      # Github Models API Endpoint
 ```
+
+### Review Specific Files in Large PRs
+
+Set `include-patterns: '*.cs'` to review only C# files, including nested directories.
+Use commas for multiple patterns (for example, `'*.cs,*.fs'`); `exclude-patterns` takes priority.
+
+```yaml
+permissions:
+  contents: read
+  pull-requests: write
+
+# In the DeepSeek Code Review step:
+with:
+  chat-token: ${{ secrets.CHAT_TOKEN }}
+  include-patterns: '*.cs'
+```
+
+For PRs with 3,000 or more changed files, or when GitHub cannot return the diff,
+the action fetches the PR commits into a temporary Git repository and compares
+the PR head with its merge base. File patterns are applied before downloading
+file contents. No checkout step is needed. Git must be installed, and the GitHub
+token needs `contents: read` access to fetch private repositories. Renames appear
+as deletion/addition pairs in this mode. If no files match, the review is skipped.
+The CLI uses the same behavior with `--include '*.cs'`.
 
 ## Input Parameters
 

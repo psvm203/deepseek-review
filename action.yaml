@@ -43,7 +43,7 @@ inputs:
     description: 'The user prompt for DeepSeek API.'
   include-patterns:
     required: false
-    description: 'The comma separated file patterns to include in the code review.'
+    description: 'Comma separated file patterns to review, e.g. *.cs or *.cs,*.fs. Large PRs use Git to avoid GitHub diff limits; contents: read permission is required.'
   exclude-patterns:
     required: false
     default: 'pnpm-lock.yaml,package-lock.json,*.lock'
