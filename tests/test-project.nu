@@ -70,7 +70,8 @@ def 'meta：the action tag matches the package version' [] {
   # it, so a mismatch here ships a release under the wrong tag.
   let meta = open meta.json
   let parts = $meta.version | split row '.'
-  assert equal $meta.actionVer $'v($parts.0).($parts.1)'
+  let version = if $parts.2 == '0' { $parts | first 2 | str join '.' } else { $meta.version }
+  assert equal $meta.actionVer $'v($version)'
   assert equal $meta.name 'deepseek-review'
 }
 

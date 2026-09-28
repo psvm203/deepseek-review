@@ -159,12 +159,12 @@ def get-pr-git-diff [pr: record, --include: string, --exclude: string] {
     # Bound command-line size; literal pathspecs keep filenames from becoming globs.
     $paths | chunks 100 | each {|batch|
       do $git ...[-c core.quotePath=false diff --no-ext-diff --no-textconv --no-color
-        --no-renames --src-prefix=a/ --dst-prefix=b/ $range --]
-        ...($batch | each {|path| $':(literal)($path)' })
+        --no-renames --src-prefix=a/ --dst-prefix=b/ $range --
+        ...($batch | each {|path| ':(literal)' + $path })]
     } | str join
   } catch {|err|
     rm -rf $dir
-    error make { msg: $err.msg }
+    error make $err
   }
   rm -rf $dir
   $content

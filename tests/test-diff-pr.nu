@@ -26,6 +26,8 @@ def setup [] {
   'class After {}' | save -f Root.cs
   'class Added {}' | save 'src/New file.cs'
   'class Generated {}' | save src/Generated.cs
+  'class Literal {}' | save 'src/[One].cs'
+  'class Other {}' | save src/O.cs
   rm src/Removed.cs
   git mv src/Old.cs src/Renamed.cs
   for i in 1..3001 { $'asset ($i)' | save ($'assets/($i).meta') }
@@ -61,7 +63,7 @@ def "http get" [--headers(-H): list, url: string] {
     dir: $dir,
     modules: $modules,
     pr: {
-      title: 'Large PR', body: '', changed_files: 3007,
+      title: 'Large PR', body: '', changed_files: 3009,
       base: {sha: $base, repo: {clone_url: $'file:///($repo | str replace -a "\\" "/" | str replace -r "^/+" "")'}},
       head: {sha: $head}
     }
@@ -129,6 +131,15 @@ def 'PR diff：multiple patterns and exclude-only filters work' [] {
   assert equal $excluded.exit_code 0 $excluded.stderr
   assert not ($excluded.stdout | str contains '.cs')
   assert equal ($excluded.stdout | lines | where $it starts-with 'diff --git ' | length) 3001
+}
+
+@test
+def 'PR diff：passes filenames as literal Git pathspecs' [] {
+  let ctx = $in
+  let result = run-diff $ctx $ctx.pr '--include "src/[One].cs"'
+  assert equal $result.exit_code 0 $result.stderr
+  let headers = $result.stdout | lines | where $it starts-with 'diff --git '
+  assert equal $headers ['diff --git a/src/[One].cs b/src/[One].cs']
 }
 
 @test
